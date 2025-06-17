@@ -21,6 +21,15 @@ class Pelaporan extends Model
         'status_id',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'tanggal_laporan' => 'datetime', // Add this line
+    ];
+
     public function status()
     {
         return $this->belongsTo(StatusLaporan::class, 'status_id');
@@ -31,5 +40,4 @@ class Pelaporan extends Model
     {
         return $this->belongsTo(Kategori::class);
     }
-
 }
