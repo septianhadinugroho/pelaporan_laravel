@@ -277,11 +277,11 @@ tr:nth-child(even) {
 }
 
 .btn-waiting {
-    background-color: #f39c12;
+    background-color: #f39c12; /* Orange for 'Menunggu' */
 }
 
 .btn-accepted {
-    background-color: #2ecc71; /* Green for accepted/selesai */
+    background-color: #2ecc71; /* Green for 'Selesai' */
 }
 
 .btn-delete {

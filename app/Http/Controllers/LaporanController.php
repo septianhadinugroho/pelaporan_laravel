@@ -87,24 +87,25 @@ class LaporanController extends Controller
 
         return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
     }
+
     public function delete($id)
     {
-        if (Auth::check() && Auth::user()->role_id == 1) {
-            $pelaporan = Pelaporan::find($id);
+        if (Auth::check() && Auth::user()->role_id == 1) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+            $pelaporan = Pelaporan::find($id); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
 
-            if (!$pelaporan) {
-                return response()->json(['success' => false, 'message' => 'Laporan tidak ditemukan.'], 404);
+            if (!$pelaporan) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+                return response()->json(['success' => false, 'message' => 'Laporan tidak ditemukan.'], 404); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
             }
 
             // Delete associated media file if it exists
-            if ($pelaporan->media) {
-                Storage::delete($pelaporan->media);
+            if ($pelaporan->media) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+                Storage::delete($pelaporan->media); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
             }
 
-            $pelaporan->delete();
+            $pelaporan->delete(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
 
-            return response()->json(['success' => true, 'message' => 'Laporan berhasil dihapus.']);
+            return response()->json(['success' => true, 'message' => 'Laporan berhasil dihapus.']); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
         }
-        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
     }
 }

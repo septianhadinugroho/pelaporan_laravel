@@ -192,40 +192,57 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Make an AJAX request to update the status in the database
-        fetch(`/admin/laporan/${reportId}/update-status`, { //
-            method: 'POST', //
-            headers: { //
-                'Content-Type': 'application/json', //
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') //
+        fetch(`/admin/laporan/${reportId}/update-status`, { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            method: 'POST', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            headers: { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                'Content-Type': 'application/json', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
             },
-            body: JSON.stringify({ status_id: newStatusId }) //
+            body: JSON.stringify({ status_id: newStatusId }) /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
         })
-        .then(response => { //
-            if (!response.ok) { //
-                return response.json().then(err => { throw new Error(err.message || 'Something went wrong'); }); //
+        .then(response => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            if (!response.ok) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                return response.json().then(err => { throw new Error(err.message || 'Something went wrong'); }); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
             }
-            return response.json(); //
+            return response.json(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
         })
-        .then(data => { //
-            if (data.success) { //
+        .then(data => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            if (data.success) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
                 // Update the button text and class on successful update
-                buttonElement.textContent = newStatusName; //
-                if (newStatusName === "Menunggu") { //
-                    buttonElement.classList.remove('btn-accepted'); //
-                    buttonElement.classList.add('btn-waiting'); //
-                } else if (newStatusName === "Selesai") { //
-                    buttonElement.classList.remove('btn-waiting'); //
-                    buttonElement.classList.add('btn-accepted'); //
+                buttonElement.textContent = newStatusName; /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                if (newStatusName === "Menunggu") { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    buttonElement.classList.remove('btn-accepted'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    buttonElement.classList.add('btn-waiting'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    buttonElement.setAttribute('data-current-status', 'Menunggu'); // Update data attribute
+                } else if (newStatusName === "Selesai") { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    buttonElement.classList.remove('btn-waiting'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    buttonElement.classList.add('btn-accepted'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    buttonElement.setAttribute('data-current-status', 'Selesai'); // Update data attribute
                 }
-                console.log(`Status updated for report ${reportId} to ${newStatusName}`); //
-            } else { //
-                console.error('Failed to update status:', data.message); //
-                alert('Gagal memperbarui status: ' + data.message); //
+                console.log(`Status updated for report ${reportId} to ${newStatusName}`); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                // Optionally, you might want to update the status text in the table row directly if it's visible.
+                // You can find the status cell by traversing the DOM from the buttonElement.
+                const row = buttonElement.closest('tr');
+                if (row) {
+                    const statusCell = row.querySelector('td:nth-child(6) .btn-accept'); // Adjust selector if needed
+                    if (statusCell) {
+                        statusCell.textContent = newStatusName;
+                        statusCell.classList.remove('btn-waiting', 'btn-accepted');
+                        if (newStatusName === "Menunggu") {
+                            statusCell.classList.add('btn-waiting');
+                        } else if (newStatusName === "Selesai") {
+                            statusCell.classList.add('btn-accepted');
+                        }
+                    }
+                }
+            } else { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                console.error('Failed to update status:', data.message); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                alert('Gagal memperbarui status: ' + data.message); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
             }
         })
-        .catch(error => { //
-            console.error('Error updating status:', error); //
-            alert('Terjadi kesalahan saat memperbarui status. Silakan coba lagi.'); //
+        .catch(error => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            console.error('Error updating status:', error); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            alert('Terjadi kesalahan saat memperbarui status. Silakan coba lagi.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
         });
     }
     
@@ -576,38 +593,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function() {
-            const reportId = deleteModal.dataset.rowId;
-            fetch(`/admin/laporan/${reportId}/delete`, { // Assuming you'll add this route
-                method: 'POST', // or DELETE, depending on your route definition
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json'
+    if (confirmDeleteBtn) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+        confirmDeleteBtn.addEventListener('click', function() { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            const reportId = deleteModal.dataset.rowId; /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+            fetch(`/admin/laporan/${reportId}/delete`, { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                method: 'POST', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                headers: { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    'Content-Type': 'application/json' /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
                 }
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => { throw new Error(err.message || 'Failed to delete report'); });
+            .then(response => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                if (!response.ok) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    return response.json().then(err => { throw new Error(err.message || 'Failed to delete report'); }); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
                 }
-                return response.json();
+                return response.json(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
             })
-            .then(data => {
-                if (data.success) {
-                    alert('Laporan berhasil dihapus.');
+            .then(data => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                if (data.success) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    alert('Laporan berhasil dihapus.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
                     location.reload(); // Reload the page to reflect changes
-                } else {
-                    alert('Gagal menghapus laporan: ' + data.message);
+                } else { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                    alert('Gagal menghapus laporan: ' + data.message); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
                 }
             })
-            .catch(error => {
-                console.error('Error deleting report:', error);
-                alert('Terjadi kesalahan saat menghapus laporan.');
+            .catch(error => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                console.error('Error deleting report:', error); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                alert('Terjadi kesalahan saat menghapus laporan.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
             })
-            .finally(() => {
-                closeDeleteModal();
+            .finally(() => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
+                closeDeleteModal(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
             });
         });
     }
-
 });

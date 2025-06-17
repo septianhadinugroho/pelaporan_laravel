@@ -68,31 +68,31 @@ loginForm.addEventListener('submit', function(e) {
 });
 
 signupForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
+    // e.preventDefault(); // Comment this line out temporarily for debugging Laravel validation
+
     const name = document.getElementById('signup-name').value;
     const email = document.getElementById('signup-email').value;
     const password = document.getElementById('signup-password').value;
     const confirmPassword = document.getElementById('signup-confirm-password').value;
-    
-    // Validate inputs
-    if (!name || !email || !password || !confirmPassword) {
-        alert('Please fill in all fields');
-        return;
-    }
-    
-    if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return;
-    }
+
+    // Validate inputs (Temporarily comment out these client-side alerts)
+    // if (!name || !email || !password || !confirmPassword) {
+    //     alert('Please fill in all fields');
+    //     return;
+    // }
+
+    // if (password !== confirmPassword) {
+    //     alert('Passwords do not match');
+    //     return;
+    // }
 
     localStorage.setItem('registeredUserName', name);
     localStorage.setItem('registeredUserEmail', email);
 
-    
+
     // Here you would typically make an API call to your backend for registration
     console.log('Registration attempt with:', { name, email });
-    
+
     // For demo purposes
-    alert(`Registration attempt for: ${name} (${email})`);
+    // alert(`Registration attempt for: <span class="math-inline">\{name\} \(</span>{email})`); // Temporarily comment this out
 });

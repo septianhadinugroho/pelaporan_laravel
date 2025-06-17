@@ -107,7 +107,7 @@
                                             data-kategori="{{ $report->kategori->name ?? 'N/A' }}"
                                             data-deskripsi="{{ $report->deskripsi }}"
                                             data-media="{{ $report->media ? asset('storage/' . $report->media) : '' }}">Detail</button>
-                                        <button class="btn btn-accept {{ ($report->status->nama_status == 'Dalam Antrian') ? 'btn-waiting' : '' }}"
+                                        <button class="btn btn-accept {{ ($report->status->nama_status == 'Menunggu') ? 'btn-waiting' : 'btn-accepted' }}"
                                             data-row-id="{{ $report->id }}"
                                             data-current-status="{{ $report->status->nama_status }}">
                                             {{ $report->status->nama_status }}

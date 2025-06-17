@@ -49,29 +49,29 @@ class AuthController extends Controller
 
     public function register(Request $request) {
         // Validasi input form
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed', // memastikan password_confirmation cocok
+        $request->validate([ /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'name' => 'required|string|max:255', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'email' => 'required|string|email|max:255|unique:users', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'password' => 'required|string|min:8|confirmed', // memastikan password_confirmation cocok /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
         ]);
 
         // Membuat user baru dengan role_id default 2 (User)
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id' => 2, // default role_id = 2 untuk user biasa
+        $user = User::create([ /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'name' => $request->name, /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'email' => $request->email, /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'password' => Hash::make($request->password), /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            'role_id' => 2, // default role_id = 2 untuk user biasa /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
         ]);
 
-       // Cek apakah berhasil menyimpan
-        if ($user) {
+    // Cek apakah berhasil menyimpan
+        if ($user) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
             // Notifikasi berhasil
-            Session::flash('success', 'Registrasi berhasil! Silakan login.');
-            return redirect()->route('login'); // Redirect ke halaman login
+            Session::flash('success', 'Registrasi berhasil! Silakan login.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+            return redirect()->route('login'); // Redirect ke halaman login /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
         }
 
         // Jika gagal, tampilkan notifikasi error
-        Session::flash('error', 'Registrasi gagal. Silakan coba lagi.');
-        return redirect()->route('login'); // Kembali ke halaman register
+        Session::flash('error', 'Registrasi gagal. Silakan coba lagi.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
+        return redirect()->route('login'); // Kembali ke halaman register /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/AuthController.php */
     }
 }
