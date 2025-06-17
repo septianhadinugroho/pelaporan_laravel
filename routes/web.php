@@ -16,9 +16,12 @@ Route::get('/', function () {
 Route::middleware(['only_admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/admin/laporan', [LaporanController::class, 'indexAdmin'])->name('admin.laporan.index');
-    // New route for updating report status
-    Route::post('/admin/laporan/{id}/update-status', [LaporanController::class, 'updateStatus'])->name('admin.laporan.update_status');
-    Route::post('/admin/laporan/{id}/delete', [LaporanController::class, 'delete'])->name('admin.laporan.delete');
+    
+    // FIXED: Change to PUT method for update status (RESTful)
+    Route::put('/admin/laporan/{id}/update-status', [LaporanController::class, 'updateStatus'])->name('admin.laporan.update_status');
+    
+    // FIXED: Change to DELETE method for delete (RESTful)
+    Route::delete('/admin/laporan/{id}/delete', [LaporanController::class, 'delete'])->name('admin.laporan.delete');
 });
 
 // Hanya untuk user

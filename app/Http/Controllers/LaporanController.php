@@ -27,8 +27,8 @@ class LaporanController extends Controller
             $mediaPath = $request->file('media')->store('public/laporan_media');
         }
 
-        // Get default status_id for 'Menunggu' (which was 'Dalam Antrian' before)
-        $defaultStatus = StatusLaporan::where('nama_status', 'Menunggu')->first(); // Changed from 'Dalam Antrian'
+        // Get default status_id for 'Menunggu'
+        $defaultStatus = StatusLaporan::where('nama_status', 'Menunggu')->first();
         if (!$defaultStatus) {
             return response()->json(['success' => false, 'message' => 'Default status "Menunggu" not found.'], 500);
         }
@@ -59,16 +59,16 @@ class LaporanController extends Controller
     {
         $laporans = Pelaporan::with(['kategori', 'status'])->latest('created_at')->paginate(10);
         $kategoris = Kategori::all();
-        $statuses = StatusLaporan::all(); // This will now only fetch 'Menunggu' and 'Selesai'
+        $statuses = StatusLaporan::all();
 
         return view('admin.listLaporan', compact('laporans', 'kategoris', 'statuses'));
     }
 
-    // New method to update report status via AJAX
+    // Update report status via AJAX
     public function updateStatus(Request $request, $id)
     {
         // Ensure only authenticated admin can update status
-        if (Auth::check() && Auth::user()->role_id == 1) { // 1 is admin role_id
+        if (Auth::check() && Auth::user()->role_id == 1) {
             $pelaporan = Pelaporan::find($id);
 
             if (!$pelaporan) {
@@ -88,24 +88,39 @@ class LaporanController extends Controller
         return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
     }
 
+    // Fixed delete method
     public function delete($id)
     {
-        if (Auth::check() && Auth::user()->role_id == 1) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
-            $pelaporan = Pelaporan::find($id); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+        try {
+            // Check if user is authenticated and is admin
+            if (!Auth::check() || Auth::user()->role_id != 1) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+            }
 
-            if (!$pelaporan) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
-                return response()->json(['success' => false, 'message' => 'Laporan tidak ditemukan.'], 404); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+            $pelaporan = Pelaporan::find($id);
+
+            if (!$pelaporan) {
+                return response()->json(['success' => false, 'message' => 'Laporan tidak ditemukan.'], 404);
             }
 
             // Delete associated media file if it exists
-            if ($pelaporan->media) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
-                Storage::delete($pelaporan->media); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+            if ($pelaporan->media) {
+                // Remove 'public/' prefix if it exists for proper deletion
+                $mediaPath = str_replace('public/', '', $pelaporan->media);
+                Storage::disk('public')->delete($mediaPath);
             }
 
-            $pelaporan->delete(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+            // Delete the record from database
+            $deleted = $pelaporan->delete();
 
-            return response()->json(['success' => true, 'message' => 'Laporan berhasil dihapus.']); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
+            if ($deleted) {
+                return response()->json(['success' => true, 'message' => 'Laporan berhasil dihapus.']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'Gagal menghapus laporan.'], 500);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
         }
-        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/app/Http/Controllers/LaporanController.php */
     }
 }

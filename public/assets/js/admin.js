@@ -1,629 +1,211 @@
+// admin.js - Add this to your existing admin.js file
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Get references to elements
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Delete functionality
+    let deleteReportId = null;
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+    // Handle delete button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-delete')) {
+            deleteReportId = e.target.getAttribute('data-row-id');
+            deleteModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    });
+
+    // Cancel delete
+    cancelDeleteBtn.addEventListener('click', function() {
+        deleteModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        deleteReportId = null;
+    });
+
+    // Confirm delete
+    confirmDeleteBtn.addEventListener('click', function() {
+        if (deleteReportId) {
+            // Show loading state
+            confirmDeleteBtn.disabled = true;
+            confirmDeleteBtn.textContent = 'Menghapus...';
+
+            fetch(`/admin/laporan/${deleteReportId}/delete`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the row from table
+                    const row = document.querySelector(`[data-row-id="${deleteReportId}"]`).closest('tr');
+                    if (row) {
+                        row.remove();
+                    }
+                    
+                    // Close modal
+                    deleteModal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    
+                    // Show success message (you can customize this)
+                    alert('Laporan berhasil dihapus!');
+                    
+                    // Refresh page to update pagination and numbering
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    alert('Gagal menghapus laporan: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat menghapus laporan');
+            })
+            .finally(() => {
+                // Reset button state
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.textContent = 'Hapus';
+                deleteReportId = null;
+            });
+        }
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(e) {
+        if (e.target === deleteModal) {
+            deleteModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            deleteReportId = null;
+        }
+    });
+
+    // Detail modal functionality (if not already exists)
+    const detailModal = document.getElementById('detailModal');
+    const closeDetailBtn = document.getElementById('closeDetailBtn');
+
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-detail')) {
+            const nama = e.target.getAttribute('data-nama');
+            const tanggal = e.target.getAttribute('data-tanggal');
+            const kategori = e.target.getAttribute('data-kategori');
+            const deskripsi = e.target.getAttribute('data-deskripsi');
+            const media = e.target.getAttribute('data-media');
+
+            document.getElementById('modal-nama').value = nama;
+            document.getElementById('modal-tanggal').value = tanggal;
+            document.getElementById('modal-kategori').value = kategori;
+            document.getElementById('modal-deskripsi').textContent = deskripsi;
+            
+            const mediaImg = document.getElementById('modal-media');
+            if (media) {
+                mediaImg.src = media;
+                mediaImg.style.display = 'block';
+            } else {
+                mediaImg.style.display = 'none';
+            }
+
+            detailModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+    });
+
+    if (closeDetailBtn) {
+        closeDetailBtn.addEventListener('click', function() {
+            detailModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Status update functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-accept')) {
+            const reportId = e.target.getAttribute('data-row-id');
+            const currentStatus = e.target.getAttribute('data-current-status');
+            
+            // Toggle between 'Menunggu' and 'Selesai'
+            const newStatus = currentStatus === 'Menunggu' ? 'Selesai' : 'Menunggu';
+            const newStatusId = newStatus === 'Menunggu' ? 1 : 2; // Adjust these IDs based on your database
+
+            fetch(`/admin/laporan/${reportId}/update-status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    status_id: newStatusId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update button text and class
+                    e.target.textContent = newStatus;
+                    e.target.setAttribute('data-current-status', newStatus);
+                    
+                    if (newStatus === 'Menunggu') {
+                        e.target.classList.remove('btn-accepted');
+                        e.target.classList.add('btn-waiting');
+                    } else {
+                        e.target.classList.remove('btn-waiting');
+                        e.target.classList.add('btn-accepted');
+                    }
+                } else {
+                    alert('Gagal mengupdate status: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan saat mengupdate status');
+            });
+        }
+    });
+
+    // Logout functionality
+    const logoutLink = document.getElementById('logout-link');
+    const logoutModal = document.getElementById('logoutModal');
+    const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+
+    if (logoutLink) {
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            logoutModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    if (cancelLogoutBtn) {
+        cancelLogoutBtn.addEventListener('click', function() {
+            logoutModal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+    }
+
+    // Sidebar toggle functionality
     const menuToggle = document.querySelector('.menu-toggle');
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.querySelector('.sidebar-overlay');
 
-    // Toggle sidebar on hamburger menu click
-    menuToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('active');
-        sidebarOverlay.classList.toggle('active');
-        
-        // Hide the menu toggle icon when sidebar is active
-        if (sidebar.classList.contains('active')) {
-            menuToggle.style.visibility = 'hidden';
-        } else {
-            menuToggle.style.visibility = 'visible';
-        }
-    });
-    
-    // Close sidebar when clicking on overlay
-    sidebarOverlay.addEventListener('click', function() {
-        sidebar.classList.remove('active');
-        sidebarOverlay.classList.remove('active');
-        menuToggle.style.visibility = 'visible';
-    });
-    
-    // Close sidebar when window is resized to desktop view
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 768) {
+    if (menuToggle) {
+        menuToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
             sidebar.classList.remove('active');
             sidebarOverlay.classList.remove('active');
-            menuToggle.style.visibility = 'visible';
-        }
-        
-        // Ensure the sidebar height is always full height
-        adjustSidebarHeight();
-    });
-    
-    // Close sidebar when clicking on menu items (for mobile)
-    const menuItems = document.querySelectorAll('.menu-item');
-    menuItems.forEach(item => {
-        item.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('active');
-                sidebarOverlay.classList.remove('active');
-                menuToggle.style.visibility = 'visible';
-            }
-        });
-    });
-    
-    // Function to adjust sidebar height
-    function adjustSidebarHeight() {
-        const mainContainerHeight = document.querySelector('.main-container').offsetHeight;
-        const windowHeight = window.innerHeight;
-        const headerHeight = document.querySelector('.header').offsetHeight;
-        
-        // Set sidebar height to either the main container height or viewport height minus header
-        const sidebarHeight = Math.max(mainContainerHeight, windowHeight - headerHeight);
-        sidebar.style.height = sidebarHeight + 'px';
-    }
-    
-    // Initial adjustment
-    adjustSidebarHeight();
-    
-    // Re-adjust on window resize
-    window.addEventListener('resize', adjustSidebarHeight);
-    
-    // Re-adjust when content changes (might affect height)
-    const observer = new MutationObserver(adjustSidebarHeight);
-    observer.observe(document.querySelector('.main-content'), {
-        childList: true,
-        subtree: true
-    });
-
-    // Modal elements
-    const detailModal = document.getElementById('detailModal');
-    const deleteModal = document.getElementById('deleteModal');
-    const logoutModal = document.getElementById('logoutModal');
-    const closeDetailBtn = document.getElementById('closeDetailBtn');
-    const closeModalBtn = document.querySelector('.close-modal');
-    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
-    const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
-
-    // Connect logout button to the modal
-    const logoutLink = document.getElementById('logout-link');
-    
-    // Connect logout button to the modal
-    if (logoutLink) {
-        logoutLink.addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent default navigation
-            openLogoutModal();
-        });
-    }
-
-    // Function to open detail modal
-    function openDetailModal(rowData) {
-        // Populate modal with data
-        document.getElementById('modal-nama').value = rowData.nama; //
-        document.getElementById('modal-tanggal').value = rowData.tanggal; //
-        document.getElementById('modal-kategori').value = rowData.kategori; //
-        document.getElementById('modal-deskripsi').textContent = rowData.deskripsi; //
-        const mediaElement = document.getElementById('modal-media'); //
-        if (rowData.media) { //
-            mediaElement.src = rowData.media; //
-            mediaElement.style.display = 'block'; //
-        } else { //
-            mediaElement.style.display = 'none'; //
-        }
-        
-        // Show the modal
-        detailModal.style.display = 'block'; //
-        
-        // Prevent body scrolling when modal is open
-        document.body.style.overflow = 'hidden'; //
-    }
-    
-    // Function to close detail modal
-    function closeDetailModal() {
-        detailModal.style.display = 'none'; //
-        
-        // Restore body scrolling
-        document.body.style.overflow = 'auto'; //
-    }
-    
-    // Function to open delete confirmation modal
-    function openDeleteModal(rowId) {
-        // Store the row ID for deletion (could be used later with AJAX)
-        deleteModal.dataset.rowId = rowId; //
-        
-        // Show the modal
-        deleteModal.style.display = 'block'; //
-        
-        // Prevent body scrolling
-        document.body.style.overflow = 'hidden'; //
-    }
-    
-    // Function to close delete modal
-    function closeDeleteModal() {
-        deleteModal.style.display = 'none'; //
-        
-        // Restore body scrolling
-        document.body.style.overflow = 'auto'; //
-    }
-
-    // Function to open logout confirmation modal
-    function openLogoutModal() {
-        // Show the modal
-        logoutModal.style.display = 'block'; //
-        
-        // Prevent body scrolling
-        document.body.style.overflow = 'hidden'; //
-    }
-    
-    // Function to close logout modal
-    function closeLogoutModal() {
-        logoutModal.style.display = 'none'; //
-        
-        // Restore body scrolling
-        document.body.style.overflow = 'auto'; //
-    }
-    
-    // Handle logout confirmation
-    if (confirmLogoutBtn) {
-        confirmLogoutBtn.addEventListener('click', function() {
-            // This is already handled by the form submission action="{{ route('logout') }}"
-            // window.location.href = 'login.html'; // Remove this line
-        });
-    }
-    
-    // Handle logout cancellation
-    if (cancelLogoutBtn) {
-        cancelLogoutBtn.addEventListener('click', closeLogoutModal); //
-    }
-    
-    // Handle status update (accept button)
-    function handleStatusUpdate(reportId, currentStatusName, buttonElement) {
-        let newStatusId;
-        let newStatusName;
-
-        // Determine the new status based on the current status
-        if (currentStatusName === "Menunggu") {
-            newStatusId = 2; // Assuming 'Selesai' has ID 2
-            newStatusName = "Selesai";
-        } else if (currentStatusName === "Selesai") {
-            newStatusId = 1; // Assuming 'Menunggu' has ID 1
-            newStatusName = "Menunggu";
-        } else {
-            console.error("Unexpected status encountered:", currentStatusName);
-            return;
-        }
-
-        // Make an AJAX request to update the status in the database
-        fetch(`/admin/laporan/${reportId}/update-status`, { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            method: 'POST', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            headers: { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                'Content-Type': 'application/json', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            },
-            body: JSON.stringify({ status_id: newStatusId }) /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-        })
-        .then(response => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            if (!response.ok) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                return response.json().then(err => { throw new Error(err.message || 'Something went wrong'); }); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            }
-            return response.json(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-        })
-        .then(data => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            if (data.success) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                // Update the button text and class on successful update
-                buttonElement.textContent = newStatusName; /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                if (newStatusName === "Menunggu") { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    buttonElement.classList.remove('btn-accepted'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    buttonElement.classList.add('btn-waiting'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    buttonElement.setAttribute('data-current-status', 'Menunggu'); // Update data attribute
-                } else if (newStatusName === "Selesai") { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    buttonElement.classList.remove('btn-waiting'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    buttonElement.classList.add('btn-accepted'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    buttonElement.setAttribute('data-current-status', 'Selesai'); // Update data attribute
-                }
-                console.log(`Status updated for report ${reportId} to ${newStatusName}`); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                // Optionally, you might want to update the status text in the table row directly if it's visible.
-                // You can find the status cell by traversing the DOM from the buttonElement.
-                const row = buttonElement.closest('tr');
-                if (row) {
-                    const statusCell = row.querySelector('td:nth-child(6) .btn-accept'); // Adjust selector if needed
-                    if (statusCell) {
-                        statusCell.textContent = newStatusName;
-                        statusCell.classList.remove('btn-waiting', 'btn-accepted');
-                        if (newStatusName === "Menunggu") {
-                            statusCell.classList.add('btn-waiting');
-                        } else if (newStatusName === "Selesai") {
-                            statusCell.classList.add('btn-accepted');
-                        }
-                    }
-                }
-            } else { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                console.error('Failed to update status:', data.message); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                alert('Gagal memperbarui status: ' + data.message); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            }
-        })
-        .catch(error => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            console.error('Error updating status:', error); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            alert('Terjadi kesalahan saat memperbarui status. Silakan coba lagi.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-        });
-    }
-    
-    // Handle row deletion
-    function handleDelete(rowId) {
-        // Find the row with the matching ID
-        const rows = document.querySelectorAll('tbody tr'); //
-        let rowToDelete = null; //
-        
-        rows.forEach(row => { //
-            const firstCell = row.querySelector('td:first-child'); //
-            if (firstCell && firstCell.textContent === rowId) { //
-                rowToDelete = row; //
-            }
-        });
-        
-        if (rowToDelete) { //
-            // Check if there's an action row that follows
-            const nextRow = rowToDelete.nextElementSibling; //
-            if (nextRow && nextRow.classList.contains('action-row')) { //
-                nextRow.remove(); //
-            }
-            
-            // Remove the row
-            rowToDelete.remove(); //
-            
-            // Here you would typically make an AJAX call to delete from the server
-            console.log(`Row ${rowId} deleted`); //
-            
-            // Update pagination if needed
-            if (typeof displayRows === 'function') { //
-                displayRows(); //
-            }
-        }
-        
-        // Close the modal
-        closeDeleteModal(); //
-    }
-
-    // Function to handle responsive table behavior
-    function setupResponsiveTable() {
-        const tableRows = document.querySelectorAll('.data-table-container tbody tr:not(.action-row)'); //
-        
-        // First, clean up any existing action rows to prevent duplication
-        const existingActionRows = document.querySelectorAll('.action-row'); //
-        existingActionRows.forEach(row => row.remove()); //
-        
-        // For each data row, create a corresponding action row
-        tableRows.forEach(row => { //
-            // Get the row ID (for data-row-id attributes)
-            const rowId = row.querySelector('td:first-child').textContent; //
-            
-            // Get the action buttons from the last cell
-            const actionCell = row.querySelector('td:last-child'); //
-            if (!actionCell) return; // Skip if no action cell //
-            
-            const actionButtons = actionCell.querySelector('.action-buttons'); //
-            if (!actionButtons) return; // Skip if no buttons //
-            
-            // Add data-row-id to each original button
-            const originalButtons = actionButtons.querySelectorAll('button'); //
-            originalButtons.forEach(button => { //
-                button.setAttribute('data-row-id', rowId); //
-            });
-            
-            // Create a new row for actions
-            const actionRow = document.createElement('tr'); //
-            actionRow.className = 'action-row'; //
-            actionRow.style.display = window.innerWidth <= 992 ? 'table-row' : 'none'; //
-            
-            // Create a cell that spans all columns
-            const actionCell2 = document.createElement('td'); //
-            actionCell2.colSpan = 5; // span all visible columns //
-            
-            // Create a container for the buttons
-            const buttonContainer = document.createElement('div'); //
-            buttonContainer.className = 'action-buttons-responsive'; //
-            
-            // Clone the buttons
-            buttonContainer.innerHTML = actionButtons.innerHTML; //
-            
-            // Add data-row-id to each cloned button
-            const clonedButtons = buttonContainer.querySelectorAll('button'); //
-            clonedButtons.forEach(button => { //
-                button.setAttribute('data-row-id', rowId); //
-            });
-            
-            // Add the buttons to the cell
-            actionCell2.appendChild(buttonContainer); //
-            
-            // Add the cell to the row
-            actionRow.appendChild(actionCell2); //
-            
-            // Insert the action row after the current row
-            row.parentNode.insertBefore(actionRow, row.nextSibling); //
-        });
-    }
-    
-    // Add event delegation to the whole table
-    document.querySelector('.data-table-container').addEventListener('click', function(event) {
-        // Check if a button was clicked
-        const button = event.target.closest('button'); //
-        
-        if (!button) return; // Not a button click //
-        
-        // Get the row ID from the button
-        const rowId = button.getAttribute('data-row-id'); //
-        if (!rowId) return; // No row ID data attribute //
-        
-        // Detail button
-        if (button.classList.contains('btn-detail')) { //
-            // Find the row by directly searching for a cell with matching content
-            let row = null; //
-            const allRows = document.querySelectorAll('.data-table-container tbody tr:not(.action-row)'); //
-            for (let i = 0; i < allRows.length; i++) { //
-                const firstCell = allRows[i].querySelector('td:first-child'); //
-                if (firstCell && firstCell.textContent === rowId) { //
-                    row = allRows[i]; //
-                    break;
-                }
-            }
-            
-            if (row) { //
-                // Extract data from the row
-                const rowData = { //
-                    nama: row.querySelector('td:nth-child(2)').textContent, //
-                    kategori: row.querySelector('td:nth-child(3)').textContent, //
-                    deskripsi: row.querySelector('td:nth-child(4)').textContent, //
-                    tanggal: row.querySelector('td:nth-child(5)').textContent, //
-                    media: button.getAttribute('data-media') // Get media URL from data attribute
-                };
-                
-                // Open the modal with this data
-                openDetailModal(rowData); //
-            }
-        }
-        
-        // Accept button
-        else if (button.classList.contains('btn-accept')) { //
-            const currentStatus = button.getAttribute('data-current-status'); //
-            handleStatusUpdate(rowId, currentStatus, button); //
-        }
-        
-        // Delete button
-        else if (button.classList.contains('btn-delete')) { //
-            openDeleteModal(rowId); //
-        }
-    });
-    
-    // Setup responsive table
-    setupResponsiveTable(); //
-    
-    // Also run when window is resized
-    window.addEventListener('resize', function() { //
-        const actionRows = document.querySelectorAll('.action-row'); //
-        
-        // Show/hide action rows based on window width
-        actionRows.forEach(row => { //
-            row.style.display = window.innerWidth <= 992 ? 'table-row' : 'none'; //
-        });
-        
-        // Show/hide the regular action column
-        const actionCells = document.querySelectorAll('th:nth-child(6), td:nth-child(6)'); //
-        actionCells.forEach(cell => { //
-            cell.style.display = window.innerWidth <= 992 ? 'none' : 'table-cell'; //
-        });
-    });
-    
-    // Close modals with close buttons
-    if (closeModalBtn) { //
-        closeModalBtn.addEventListener('click', closeDetailModal); //
-    }
-    
-    if (closeDetailBtn) { //
-        closeDetailBtn.addEventListener('click', closeDetailModal); //
-    }
-    
-    if (cancelDeleteBtn) { //
-        cancelDeleteBtn.addEventListener('click', closeDeleteModal); //
-    }
-    
-    // Handle delete confirmation
-    if (confirmDeleteBtn) { //
-        confirmDeleteBtn.addEventListener('click', function() { //
-            const rowId = deleteModal.dataset.rowId; //
-            handleDelete(rowId); //
-        });
-    }
-    
-    // Close modals when clicking outside
-    window.addEventListener('click', function(event) { //
-        if (event.target === detailModal) { //
-            closeDetailModal(); //
-        } else if (event.target === deleteModal) { //
-            closeDeleteModal(); //
-        } else if (event.target === logoutModal) { //
-            closeLogoutModal(); //
-        }
-    });
-    
-    // Handle escape key to close modals
-    document.addEventListener('keydown', function(event) { //
-        if (event.key === 'Escape') { //
-            closeDetailModal(); //
-            closeDeleteModal(); //
-            closeLogoutModal(); //
-        }
-    });
-    
-    // Pagination functionality
-    const tableRows = document.querySelectorAll('.data-table-container tbody tr:not(.action-row)'); //
-    const rowsPerPage = 10; // Maximum 10 items per page //
-    let currentPage = 1; //
-    const totalPages = Math.ceil(tableRows.length / rowsPerPage); //
-    
-    // Pagination buttons
-    const prevButton = document.querySelector('.pagination-btn:first-child'); //
-    const nextButton = document.querySelector('.pagination-btn:last-child'); //
-    const pageNumbersContainer = document.getElementById('page-numbers'); //
-    
-    // Function to display rows for current page
-    function displayRows() {
-        const startIndex = (currentPage - 1) * rowsPerPage; //
-        const endIndex = startIndex + rowsPerPage; //
-        
-        // Hide all rows first
-        tableRows.forEach((row, index) => { //
-            row.style.display = 'none'; //
-            
-            // If there's an action row after this row, hide it too
-            const nextRow = row.nextElementSibling; //
-            if (nextRow && nextRow.classList.contains('action-row')) { //
-                nextRow.style.display = 'none'; //
-            }
-        });
-        
-        // Show only rows for current page
-        for (let i = startIndex; i < endIndex && i < tableRows.length; i++) { //
-            tableRows[i].style.display = 'table-row'; //
-            
-            // If there's an action row after this row, show it too if necessary
-            const nextRow = tableRows[i].nextElementSibling; //
-            if (nextRow && nextRow.classList.contains('action-row')) { //
-                nextRow.style.display = window.innerWidth <= 992 ? 'table-row' : 'none'; //
-            }
-        }
-        
-        // Update page number display
-        updatePageNumbers(); //
-        
-        // Disable/enable prev/next buttons
-        prevButton.disabled = currentPage === 1; //
-        nextButton.disabled = currentPage === totalPages; //
-        
-        // Visual indication for disabled buttons
-        prevButton.style.opacity = currentPage === 1 ? '0.5' : '1'; //
-        nextButton.style.opacity = currentPage === totalPages ? '0.5' : '1'; //
-    }
-    
-    // Update page numbers display
-    function updatePageNumbers() {
-        if (pageNumbersContainer) { //
-            pageNumbersContainer.innerHTML = ''; //
-            
-            // Create page number buttons
-            for (let i = 1; i <= totalPages; i++) { //
-                const pageBtn = document.createElement('button'); //
-                pageBtn.className = 'pagination-btn page-number'; //
-                if (i === currentPage) { //
-                    pageBtn.classList.add('active'); //
-                }
-                pageBtn.textContent = i; //
-                
-                pageBtn.addEventListener('click', function() { //
-                    currentPage = i; //
-                    displayRows(); //
-                });
-                
-                pageNumbersContainer.appendChild(pageBtn); //
-            }
-        }
-        
-        // Update page info text
-        const pageInfo = document.getElementById('page-info'); //
-        if (pageInfo) { //
-            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`; //
-        }
-    }
-    
-    // Event listeners for pagination buttons
-    if (prevButton) { //
-        prevButton.addEventListener('click', function() { //
-            if (currentPage > 1) { //
-                currentPage--; //
-                displayRows(); //
-            }
-        });
-    }
-    
-    if (nextButton) { //
-        nextButton.addEventListener('click', function() { //
-            if (currentPage < totalPages) { //
-                currentPage++; //
-                displayRows(); //
-            }
-        });
-    }
-    
-    // Initialize pagination
-    displayRows(); //
-
-    // Filter functionality
-    const kategoriFilter = document.getElementById('kategori-filter'); //
-    const statusFilter = document.getElementById('status-filter'); //
-
-    function applyFilters() {
-        const selectedKategori = kategoriFilter.value; //
-        const selectedStatus = statusFilter.value; //
-
-        window.location.href = `{{ route('admin.laporan.index') }}?kategori=${selectedKategori}&status=${selectedStatus}`;
-    }
-
-    if (kategoriFilter) {
-        kategoriFilter.addEventListener('change', applyFilters); //
-    }
-    if (statusFilter) {
-        statusFilter.addEventListener('change', applyFilters); //
-    }
-
-    // Set filter selections based on URL parameters on page load
-    const urlParams = new URLSearchParams(window.location.search); //
-    const urlKategori = urlParams.get('kategori'); //
-    const urlStatus = urlParams.get('status'); //
-
-    if (urlKategori && kategoriFilter) {
-        kategoriFilter.value = urlKategori; //
-    }
-    if (urlStatus && statusFilter) {
-        statusFilter.value = urlStatus; //
-    }
-
-    // Handle delete button click for actual deletion (using Fetch API)
-    document.querySelector('.data-table-container').addEventListener('click', function(event) {
-        const deleteButton = event.target.closest('.btn-delete');
-        if (deleteButton) {
-            const reportId = deleteButton.getAttribute('data-row-id');
-            openDeleteModal(reportId);
-        }
-    });
-
-    if (confirmDeleteBtn) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-        confirmDeleteBtn.addEventListener('click', function() { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            const reportId = deleteModal.dataset.rowId; /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            fetch(`/admin/laporan/${reportId}/delete`, { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                method: 'POST', /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                headers: { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'), /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    'Content-Type': 'application/json' /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                }
-            })
-            .then(response => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                if (!response.ok) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    return response.json().then(err => { throw new Error(err.message || 'Failed to delete report'); }); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                }
-                return response.json(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            })
-            .then(data => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                if (data.success) { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    alert('Laporan berhasil dihapus.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    location.reload(); // Reload the page to reflect changes
-                } else { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                    alert('Gagal menghapus laporan: ' + data.message); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                }
-            })
-            .catch(error => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                console.error('Error deleting report:', error); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                alert('Terjadi kesalahan saat menghapus laporan.'); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            })
-            .finally(() => { /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-                closeDeleteModal(); /* cite: septianhadinugroho/pelaporan_laravel/pelaporan_laravel-d0033e0b8381abd760e5c525f99a0d53fb824c4f/public/assets/js/admin.js */
-            });
         });
     }
 });
