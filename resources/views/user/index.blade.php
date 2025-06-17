@@ -21,9 +21,9 @@
             <button class="menu-toggle">
                 <div class="menu-icon"></div>
             </button>
-            <a href="{{ route('index') }}" class="active-nav">Beranda</a>
+            <a href="{{ route('index') }}" class="active-nav">Dashboard</a>
             <a href="{{ route('lapor') }}">Lapor</a>
-            <a href="{{ route('riwayat-laporan') }}">Riwayat Laporan</a>
+            <a href="{{ route('riwayat.laporan') }}">Riwayat Laporan</a>
         </div>
         <div class="user-info">
             <span>{{ Auth::user()->name ?? 'Pengguna' }}</span>
@@ -36,7 +36,7 @@
         <div class="welcome-banner">
             <div class="welcome-content">
                 <h1>Selamat Datang, {{ Auth::user()->name ?? 'Pengguna' }}!</h1>
-                <p>Ini adalah halaman beranda untuk pengguna umum sistem pelaporan fasilitas.</p>
+                <p>Website Pelaporan Fasilitas</p>
                 <hr class="divider">
             </div>
 
@@ -63,7 +63,7 @@
         </div>
 
         <section class="latest-reports">
-            <h2 class="section-title">Laporan Terbaru Anda</h2>
+            <h2 class="section-title">Pelaporan Terbaru</h2>
 
             @forelse ($laporan as $item)
                 <div class="report-card">

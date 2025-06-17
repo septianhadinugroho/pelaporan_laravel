@@ -46,19 +46,25 @@ if (toggleLoginPassword) {
 
 // Form submission handling
 loginForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    
+    // Remove e.preventDefault(); as well, to allow the form to submit to Laravel
+    // e.preventDefault(); // REMOVE OR COMMENT OUT THIS LINE
+
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
-    
-    // Validate inputs
+
+    // Validate inputs (this validation can also be handled by Laravel)
     if (!email || !password) {
         alert('Please fill in all fields');
-        return;
+        // If you want to prevent submission for client-side validation,
+        // keep e.preventDefault() and return here.
+        // Otherwise, Laravel will handle validation after submission.
+        return; // Keep return if you keep e.preventDefault()
     }
 
-    // Arahkan ke dashboard
-    window.location.href = 'dashboard.html';
+    // Remove the client-side redirect.
+    // The form will now submit to the action URL defined in the HTML
+    // (which is {{ route('authentication') }} in login.blade.php)
+    // and Laravel's AuthController will handle the redirection.
 });
 
 signupForm.addEventListener('submit', function(e) {
