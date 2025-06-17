@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\LaporanController;
+use App\Http\Controllers\LaporanController; // Add this line
 use App\Http\Controllers\RiwayatLaporanController;
 
 Route::get('/', function () {
@@ -14,6 +14,7 @@ Route::get('/', function () {
 // Hanya untuk admin
 Route::middleware(['only_admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard'); // Dashboard admin
+    Route::get('/admin/laporan', [LaporanController::class, 'indexAdmin'])->name('admin.laporan.index'); // Add this line
 });
 
 // Hanya untuk user

@@ -103,8 +103,7 @@
                             <th>Kategori Laporan</th>
                             <th>Deskripsi</th>
                             <th>Tanggal</th>
-                            {{-- Action column is typically here for admin --}}
-                            <th>Aksi</th>
+                            {{-- Removed 'Aksi' column here as requested --}}
                         </tr>
                     </thead>
                     <tbody>
@@ -116,18 +115,11 @@
                                 <td>{{ $report->kategori->name ?? 'N/A' }}</td> {{-- Access category name --}}
                                 <td>{{ Str::limit($report->deskripsi, 50, '...') }}</td> {{-- Limit description length --}}
                                 <td>{{ $report->tanggal_laporan->format('d/m/Y') }}</td> {{-- Formatted date --}}
-                                <td>
-                                    <div class="action-buttons">
-                                        {{-- These buttons will likely be handled by admin.js --}}
-                                        <button class="btn btn-detail" data-row-id="{{ $report->id }}">Detail</button>
-                                        <button class="btn btn-accept" data-row-id="{{ $report->id }}">Accept</button>
-                                        <button class="btn btn-delete" data-row-id="{{ $report->id }}">Delete</button>
-                                    </div>
-                                </td>
+                                {{-- Removed action buttons for dashboard as requested --}}
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" style="text-align: center;">Tidak ada laporan terbaru.</td>
+                                <td colspan="5" style="text-align: center;">Tidak ada laporan terbaru.</td> {{-- Adjusted colspan --}}
                             </tr>
                         @endforelse
                     </tbody>

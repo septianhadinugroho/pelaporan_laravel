@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Pelaporan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; // Import Storage facade
-use Illuminate\Support\Facades\Session; // Import Session facade
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Session;
 use App\Models\Kategori; // Import Kategori model
 use App\Models\StatusLaporan; // Import StatusLaporan model
 
@@ -33,7 +33,7 @@ class LaporanController extends Controller
             // $mediaPath = str_replace('public/', '', $mediaPath);
         }
 
-        // Get default status_id for 'Diproses' or 'Dalam Antrian'
+        // Get default status_id for 'Dalam Antrian' or 'Diproses'
         $defaultStatus = StatusLaporan::where('nama_status', 'Dalam Antrian')->first();
         if (!$defaultStatus) {
             // Fallback if 'Dalam Antrian' status is not found (e.g., if seeder not run)
@@ -43,7 +43,7 @@ class LaporanController extends Controller
 
         // 2. Simpan data ke database
         $pelaporan = Pelaporan::create([
-            'judul' => 'Laporan dari ' . (Auth::user()->name ?? 'Pengguna'), // You can make this dynamic or add a field in the form
+            'judul' => 'Laporan dari ' . (Auth::user()->name ?? 'Pengguna'),
             'kategori_id' => $request->kategori_id,
             'deskripsi' => $request->deskripsi,
             'tanggal_laporan' => $request->reportDate,
@@ -61,5 +61,19 @@ class LaporanController extends Controller
             Session::flash('error', 'Gagal membuat laporan. Silakan coba lagi.');
             return back()->withInput(); // Stay on the form with old input
         }
+    }
+
+    public function indexAdmin()
+    {
+        // Fetch all reports with their categories and statuses
+        $laporans = Pelaporan::with(['kategori', 'status'])->latest('created_at')->paginate(10);
+
+        // Fetch all categories for the filter dropdown
+        $kategoris = Kategori::all();
+
+        // Fetch all statuses for the filter dropdown
+        $statuses = StatusLaporan::all();
+
+        return view('admin.listLaporan', compact('laporans', 'kategoris', 'statuses')); // Changed view name here
     }
 }
