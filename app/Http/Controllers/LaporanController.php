@@ -24,7 +24,7 @@ class LaporanController extends Controller
 
         $mediaPath = null;
         if ($request->hasFile('media')) {
-            $mediaPath = $request->file('media')->store('public/laporan_media');
+            $mediaPath = $request->file('media')->store('laporan_media', 'public');
         }
 
         // Get default status_id for 'Menunggu'
