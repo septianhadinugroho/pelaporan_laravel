@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Session;
 class AuthController extends Controller
 {
     public function login() {
-        return view('login');
+        return view('user.login');
     }
     // public function register() {
     //     return view('login');
@@ -21,23 +21,24 @@ class AuthController extends Controller
     public function authentication(Request $request) {
         $credentials = $request->validate([
             'email' => ['required', 'email'],
-            'password' => ['required'],
+            'password' => ['required']
         ]);
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            // Mengarahkan berdasarkan role
             if (Auth::user()->role_id == 1) {
-                return redirect('dashboard'); // Untuk role 1
-            } if (Auth::user()->role_id == 2) {
-                return redirect('index'); // Untuk role 2
+                return redirect()->route('dashboard'); // Dashboard untuk admin
+            } else if (Auth::user()->role_id == 2) {
+                return redirect()->route('index'); // Halaman User
             }
-
         }
-        Session::flash('error', 'Email atau Password salah.');
-        return redirect()->route('login'); // Pastikan kamu menggunakan nama rute
+
+        // Jika authentication gagal
+        Session::flash('error', 'Email atau password salah.');
+        return redirect()->route('login'); // Kembali ke form login
     }
+    
     // fungsi untuk logout
     public function logout(Request $request) {
         Auth::logout();
