@@ -280,6 +280,10 @@ tr:nth-child(even) {
     background-color: #f39c12;
 }
 
+.btn-accepted {
+    background-color: #2ecc71; /* Green for accepted/selesai */
+}
+
 .btn-delete {
     background-color: #e74c3c;
 }

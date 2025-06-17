@@ -7,9 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
-use App\Models\Kategori; // Import Kategori model
-use App\Models\StatusLaporan; // Import StatusLaporan model
-
+use App\Models\Kategori;
+use App\Models\StatusLaporan;
 
 class LaporanController extends Controller
 {
@@ -17,29 +16,22 @@ class LaporanController extends Controller
     {
         // 1. Validasi data
         $request->validate([
-            // 'judul' => 'required|string|max:255', // If you decide to add a title field
             'kategori_id' => 'required|exists:kategori,id',
-            'deskripsi' => 'required|string|max:255', // Changed from 110 to 255 based on your char limit in lapor.js
+            'deskripsi' => 'required|string|max:255',
             'reportDate' => 'required|date',
-            'media' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,bmp,mp4|max:40960', // 10MB for image, 40MB for video
-            // 'nama_pelapor' => 'required|string|max:255', // If you decide to make this editable
-            // 'lokasi' => 'required|string|max:255', // If you decide to add a location field
+            'media' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp,bmp,mp4|max:40960',
         ]);
 
         $mediaPath = null;
         if ($request->hasFile('media')) {
-            $mediaPath = $request->file('media')->store('public/laporan_media'); // Store in storage/app/public/laporan_media
-            // You might want to adjust the path to remove 'public/' prefix when saving to DB
-            // $mediaPath = str_replace('public/', '', $mediaPath);
+            $mediaPath = $request->file('media')->store('public/laporan_media');
         }
 
-        // Get default status_id for 'Dalam Antrian' or 'Diproses'
-        $defaultStatus = StatusLaporan::where('nama_status', 'Dalam Antrian')->first();
+        // Get default status_id for 'Menunggu' (which was 'Dalam Antrian' before)
+        $defaultStatus = StatusLaporan::where('nama_status', 'Menunggu')->first(); // Changed from 'Dalam Antrian'
         if (!$defaultStatus) {
-            // Fallback if 'Dalam Antrian' status is not found (e.g., if seeder not run)
-            $defaultStatus = StatusLaporan::create(['nama_status' => 'Dalam Antrian']);
+            return response()->json(['success' => false, 'message' => 'Default status "Menunggu" not found.'], 500);
         }
-
 
         // 2. Simpan data ke database
         $pelaporan = Pelaporan::create([
@@ -47,33 +39,72 @@ class LaporanController extends Controller
             'kategori_id' => $request->kategori_id,
             'deskripsi' => $request->deskripsi,
             'tanggal_laporan' => $request->reportDate,
-            'media' => $mediaPath, // Simpan path media
-            'nama_pelapor' => Auth::user()->name ?? 'Pengguna Anonim', // Get from authenticated user
-            'lokasi' => 'Lokasi Tidak Diketahui', // You can make this dynamic or add a field in the form
+            'media' => $mediaPath,
+            'nama_pelapor' => Auth::user()->name ?? 'Pengguna Anonim',
+            'lokasi' => 'Lokasi Tidak Diketahui',
             'status_id' => $defaultStatus->id,
         ]);
 
         // 3. Beri feedback dan redirect
         if ($pelaporan) {
             Session::flash('success', 'Laporan berhasil dibuat!');
-            return redirect()->route('riwayat.laporan'); // Redirect to report history
+            return redirect()->route('riwayat.laporan');
         } else {
             Session::flash('error', 'Gagal membuat laporan. Silakan coba lagi.');
-            return back()->withInput(); // Stay on the form with old input
+            return back()->withInput();
         }
     }
 
     public function indexAdmin()
     {
-        // Fetch all reports with their categories and statuses
         $laporans = Pelaporan::with(['kategori', 'status'])->latest('created_at')->paginate(10);
-
-        // Fetch all categories for the filter dropdown
         $kategoris = Kategori::all();
+        $statuses = StatusLaporan::all(); // This will now only fetch 'Menunggu' and 'Selesai'
 
-        // Fetch all statuses for the filter dropdown
-        $statuses = StatusLaporan::all();
+        return view('admin.listLaporan', compact('laporans', 'kategoris', 'statuses'));
+    }
 
-        return view('admin.listLaporan', compact('laporans', 'kategoris', 'statuses')); // Changed view name here
+    // New method to update report status via AJAX
+    public function updateStatus(Request $request, $id)
+    {
+        // Ensure only authenticated admin can update status
+        if (Auth::check() && Auth::user()->role_id == 1) { // 1 is admin role_id
+            $pelaporan = Pelaporan::find($id);
+
+            if (!$pelaporan) {
+                return response()->json(['success' => false, 'message' => 'Laporan tidak ditemukan.'], 404);
+            }
+
+            $request->validate([
+                'status_id' => 'required|exists:status,id',
+            ]);
+
+            $pelaporan->status_id = $request->status_id;
+            $pelaporan->save();
+
+            return response()->json(['success' => true, 'message' => 'Status laporan berhasil diperbarui.']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+    }
+    public function delete($id)
+    {
+        if (Auth::check() && Auth::user()->role_id == 1) {
+            $pelaporan = Pelaporan::find($id);
+
+            if (!$pelaporan) {
+                return response()->json(['success' => false, 'message' => 'Laporan tidak ditemukan.'], 404);
+            }
+
+            // Delete associated media file if it exists
+            if ($pelaporan->media) {
+                Storage::delete($pelaporan->media);
+            }
+
+            $pelaporan->delete();
+
+            return response()->json(['success' => true, 'message' => 'Laporan berhasil dihapus.']);
+        }
+        return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
     }
 }
