@@ -76,7 +76,7 @@
 
 .welcome-content {
     position: absolute;
-    top: 7%;
+    top: 40%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
@@ -118,9 +118,8 @@
 
 /* Latest Reports Section */
 .latest-reports {
-    width: calc(100% - 15px);
     max-width: 1400px;
-    margin: -70px 0 0 0;
+    margin: -70px auto 0 auto;
     background-color: white;
     border-top-left-radius: 50px;
     border-top-right-radius: 50px;
@@ -137,7 +136,7 @@
     font-weight: 600;
     line-height: normal;
     text-align: center;
-    margin-top: 130px;
+    margin-top: 5px;
     margin-bottom: 20px;
     font-size: 1.8rem;
 }
